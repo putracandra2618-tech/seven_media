@@ -11,11 +11,8 @@ class HomeController extends Controller
         $title = 'Seven Media';
         $tagline = 'mengelola tugas dengan mudah';
 
-        $features = [
-            'Membuat, mengedit, dan menghapus tugas',
-            'Membuat, mengedit, dan menghapus kategori tugas',
-        ];
-
+        $features = ['Kelola Task Harian', 'Tandai Selesai', 'Filter Kategori', 'Dashboard Statistik'];
+        
         return view('home', compact('title', 'tagline', 'features'));
     }
 }

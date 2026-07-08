@@ -1,21 +1,26 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title }}</title>
-</head>
-<body>
-    <h1>{{ $title }}</h1>
-    <p>{{ $tagline }}</p>
-    @if (isset($features))
-        <ul>
-            @foreach ($features as $feature)
-                <li>{{ $feature }}</li>
-            @endforeach
-        </ul>
-    @endif
-    <p><a href="{{ route('about') }}">Tentang Aplikasi →</a></p>
-    <p><a href="{{ route('contact') }}">Kontak →</a></p>
-</body>
-</html>
+@extends('layouts.app')
+
+@section('title', $title)
+
+@section('content')
+    <div class="text-center py-5">
+        <h1 class="display-5 fw-bold mb-3">{{ $title }}</h1>
+        <p class="lead text-muted mb-4">{{ $tagline }}</p>
+
+        <a href="{{ route('about') }}" class="btn btn-primary btn-lg">
+            Pelajari Lebih Lanjut
+        </a>
+    </div>
+
+    <div class="row mt-5">
+        @foreach($features as $feature)
+            <div class="col-md-3 mb-3">
+                <div class="card text-center shadow-sm h-100">
+                    <div class="card-body">
+                        <p class="card-text">{{ $feature }}</p>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+@endsection

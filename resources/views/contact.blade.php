@@ -1,17 +1,20 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title }}</title>
-</head>
-<body>
-    <h1>{{ $title }}</h1>
-    <ul>
-        <li><strong>Nama:</strong> {{ $name }}</li>
-        <li><strong>Email:</strong> {{ $email }}</li>
-        <li><strong>Telepon:</strong> {{ $phone }}</li>
-    </ul>
+@extends('layouts.app')
+
+@section('title', $title)
+
+@section('content')
+    <h1 class="h2 fw-bold mb-4">{{ $title }}</h1>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p class="text-muted"> Hubungi kami untuk informasi lebih lanjut.</p>  
+    <p>
+        <strong>Nama:</strong> {{ $name }}
+    </p>
+    <p>
+        <strong>Email:</strong> {{ $email }}
+    </p>
+    <p>
+        <strong>Telepon:</strong> {{ $phone }}
+    </p>
     <p><a href="{{ route('home') }}">← Kembali ke Beranda</a></p>
-</body>
-</html>
+@endsection
