@@ -22,6 +22,14 @@
                     <a class="nav-link {{ request()->routeIs('contact') ? 'active fw-semibold' : '' }}"
                        href="{{ route('contact') }}">Kontak</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('tasks.index') ? 'active fw-semibold' : '' }}"
+                       href="{{ route('tasks.index') }}">Daftar Task</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('tasks.pending') ? 'active fw-semibold' : '' }}"
+                       href="{{ route('tasks.pending') }}">Task Pending</a>
+                </li>
             </ul>
         </div>
     </div>
