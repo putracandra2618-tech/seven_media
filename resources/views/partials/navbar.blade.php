@@ -24,6 +24,14 @@
                         <a class="nav-link {{ request()->routeIs('tasks.*') ? 'active fw-semibold' : '' }}"
                            href="{{ route('tasks.index') }}">Tasks</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-semibold' : '' }}"
+                        href="{{ route('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('categories.*') ? 'active fw-semibold' : '' }}"
+                        href="{{ route('categories.index') }}">Kategori</a>
+                    </li>
                 @endauth
             </ul>
 

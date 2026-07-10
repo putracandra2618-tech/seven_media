@@ -13,10 +13,49 @@
         </a>
     </div>
 
-    <form method="GET" class="mb-3">
-    <input type="text" name="search" value="{{ request('search') }}"
-           placeholder="Cari task..." class="form-control form-control-sm">
-</form>  
+    {{-- Search & Filter --}}
+    <form method="GET" action="{{ route('tasks.index') }}" class="card shadow-sm mb-4">
+        <div class="card-body py-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold mb-1">Cari Task</label>
+                    <input type="text"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Ketik judul task..."
+                        class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold mb-1">Kategori</label>
+                    <select name="category" class="form-select form-select-sm">
+                        <option value="">Semua Kategori</option>
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}"
+                                {{ request('category') == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold mb-1">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">Semua Status</option>
+                        <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>
+                            Selesai
+                        </option>
+                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>
+                            Belum Selesai
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-1">
+                    <button type="submit" class="btn btn-dark btn-sm flex-grow-1">Filter</button>
+                    <a href="{{ route('tasks.index') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+                </div>
+            </div>
+        </div>
+    </form>  
 
     @if($tasks->isEmpty())
         <div class="card shadow-sm">
@@ -44,9 +83,17 @@
                             <td>{{ $tasks->firstItem() + $index }}</td>
                             <td>
                                 <a href="{{ route('tasks.show', $task) }}"
-                                   class="text-decoration-none fw-semibold {{ $task->is_done ? 'text-muted text-decoration-line-through' : '' }}">
+                                class="text-decoration-none fw-semibold {{ $task->is_done ? 'text-muted text-decoration-line-through' : '' }}">
                                     {{ $task->title }}
                                 </a>
+
+                                @if($task->category)
+                                    <span class="badge bg-{{ $task->category->color }} ms-1"
+                                        style="font-size: 0.7rem;">
+                                        {{ $task->category->name }}
+                                    </span>
+                                @endif
+
                                 @if($task->description)
                                     <br>
                                     <small class="text-muted">

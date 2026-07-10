@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Category\CategoryController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\TaskController;
@@ -24,4 +26,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 
 Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class);
-    });
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
+
+Route::resource('categories', CategoryController::class);

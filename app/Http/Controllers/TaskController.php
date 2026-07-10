@@ -7,26 +7,43 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = auth()->user()
+        $query = auth()->user()
             ->tasks()
-            ->latest()
-            ->paginate(10);
+            ->with('category')
+            ->latest();
 
-        return view('tasks.index', compact('tasks'));
+        // Search by judul
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by kategori
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            if ($request->status === 'done') {
+                $query->where('is_done', true);
+            } elseif ($request->status === 'pending') {
+                $query->where('is_done', false);
+            }
+        }
+
+        $tasks = $query->paginate(10)->withQueryString();
+        $categories = auth()->user()->categories()->orderBy('name')->get();
+
+        return view('tasks.index', compact('tasks', 'categories'));
     }
-
-    public function create()
-    {
-        return view('tasks.create');
-    }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
             'title'       => 'required|string|min:3|max:255',
             'description' => 'nullable|string|max:1000',
+            'category_id' => 'nullable|exists:categories,id',
         ]);
 
         $validated['is_done'] = $request->boolean('is_done');
@@ -45,11 +62,21 @@ class TaskController extends Controller
         return view('tasks.show', compact('task'));
     }
 
-    public function edit(Task $task)
+    public function create()
+    {
+        $categories = auth()->user()->categories()->orderBy('name')->get();
+
+        return view('tasks.create', compact('categories'));
+    }
+
+
+        public function edit(Task $task)
     {
         $this->authorizeTask($task);
 
-        return view('tasks.edit', compact('task'));
+        $categories = auth()->user()->categories()->orderBy('name')->get();
+
+        return view('tasks.edit', compact('task', 'categories'));
     }
 
     public function update(Request $request, Task $task)
@@ -59,6 +86,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title'       => 'required|string|min:3|max:255',
             'description' => 'nullable|string|max:1000',
+            'category_id' => 'nullable|exists:categories,id',
         ]);
 
         $validated['is_done'] = $request->boolean('is_done');
