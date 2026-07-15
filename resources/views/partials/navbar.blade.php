@@ -11,18 +11,42 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('home') ? 'active fw-semibold' : '' }}"
-                       href="{{ route('home') }}">Beranda</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('about') ? 'active fw-semibold' : '' }}"
-                       href="{{ route('about') }}">Tentang</a>
-                </li>
-                @auth
+                @guest
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tasks.*') ? 'active fw-semibold' : '' }}"
-                           href="{{ route('tasks.index') }}">Tasks</a>
+                        <a class="nav-link {{ request()->routeIs('home') ? 'active fw-semibold' : '' }}"
+                           href="{{ route('home') }}">Beranda</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('about') ? 'active fw-semibold' : '' }}"
+                           href="{{ route('about') }}">Tentang</a>
+                    </li>
+                @endguest
+                @auth
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('tasks.*') ? 'active fw-semibold' : '' }}"
+                        href="#"
+                        id="tasksDropdown"
+                        role="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                            Tasks
+                        </a>
+
+                        <ul class="dropdown-menu" aria-labelledby="tasksDropdown">
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('tasks.index') ? 'active' : '' }}"
+                                href="{{ route('tasks.index') }}">
+                                    Daftar Task
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('tasks.pending') ? 'active' : '' }}"
+                                href="{{ route('tasks.pending') }}">
+                                    Pending
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-semibold' : '' }}"
@@ -31,6 +55,10 @@
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('categories.*') ? 'active fw-semibold' : '' }}"
                         href="{{ route('categories.index') }}">Kategori</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('profile*') ? 'active fw-semibold' : '' }}"
+                        href="{{ route('profile') }}">Profile</a>
                     </li>
                 @endauth
             </ul>

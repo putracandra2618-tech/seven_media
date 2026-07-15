@@ -13,7 +13,7 @@
 
     <div class="card shadow-sm">
         <div class="card-body p-4">
-            <form action="{{ route('tasks.store') }}" method="POST" novalidate>
+            <form action="{{ route('tasks.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 {{-- Judul --}}
@@ -46,6 +46,7 @@
                     @enderror
                 </div>
 
+                {{-- Kategori --}}
                 <div class="mb-3">
                     <label for="category_id" class="form-label fw-semibold">Kategori</label>
                     <select name="category_id" id="category_id" class="form-select">
@@ -58,6 +59,43 @@
                         @endforeach
                     </select>
                 </div>
+
+                {{-- Tanggal Jatuh Tempo --}}
+                <div class="mb-3">
+                    <label for="due_date" class="form-label fw-semibold">Tanggal Jatuh Tempo</label>
+                    <input type="date"
+                           name="due_date"
+                           id="due_date"
+                           value="{{ old('due_date') }}"
+                           class="form-control @error('due_date') is-invalid @enderror">
+                    @error('due_date')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="attachments" class="form-label">Lampiran (opsional)</label>
+                    <input
+                        type="file"
+                        name="attachments[]"
+                        id="attachments"
+                        class="form-control @error('attachments.*') is-invalid @enderror"
+                        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,image/*,application/pdf"
+                        multiple>
+                    <div class="form-text">Gambar atau PDF, maksimal 1 MB per file. Bisa pilih maksimal 6 files.</div>
+                    @error('attachments.*')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <script>
+                    document.getElementById('attachments').addEventListener('change', function(e) {
+                        if (this.files.length > 6) {
+                            alert('Maksimal 6 file yang bisa dipilih!');
+                            this.value = '';
+                        }
+                    });
+                </script>
 
                 {{-- Status selesai --}}
                 <div class="mb-4 form-check">

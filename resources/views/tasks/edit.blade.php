@@ -13,7 +13,7 @@
 
     <div class="card shadow-sm">
         <div class="card-body p-4">
-            <form action="{{ route('tasks.update', $task) }}" method="POST" novalidate>
+            <form action="{{ route('tasks.update', $task) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -55,6 +55,69 @@
                         @endforeach
                     </select>
                 </div>
+
+                <div class="mb-3">
+                    <label for="due_date" class="form-label fw-semibold">Tanggal Akhir</label>
+                    <input type="date"
+                           name="due_date"
+                           id="due_date"
+                           value="{{  old('due_date', $task->due_date ? $task->due_date->format('Y-m-d') : '') }}"
+                           class="form-control @error('due_date') is-invalid @enderror">
+                    @error('due_date')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="attachments" class="form-label">Lampiran</label>
+
+                    @if ($task->attachments->count() > 0)
+                        <div class="mb-3">
+                            <span class="text-muted d-block mb-2">Lampiran saat ini:</span>
+                            <div class="list-group list-group-sm">
+                                @foreach($task->attachments as $attachment)
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="{{ route('tasks.attachment.download', [$task, $attachment]) }}" class="text-decoration-none">
+                                                {{ $attachment->original_name }}
+                                            </a>
+                                            <small class="text-muted d-block">{{ $attachment->getExtension() }} • {{ $attachment->getFormattedSize() }}</small>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <input
+                        type="file"
+                        name="attachments[]"
+                        id="attachments"
+                        class="form-control @error('attachments.*') is-invalid @enderror"
+                        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,image/*,application/pdf"
+                        multiple
+                    >
+                    <div class="form-text">Kosongkan jika tidak ingin menambah. Maksimal 1 MB per file. Bisa pilih maksimal 6 files.</div>
+                    @error('attachments.*')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <script>
+                    document.getElementById('attachments').addEventListener('change', function(e) {
+                        if (this.files.length > 6) {
+                            alert('Maksimal 6 file yang bisa dipilih!');
+                            this.value = '';
+                        }
+                    });
+                </script>
+
+                @if ($task->attachments->count() > 0)
+                    <div class="mb-3 form-check">
+                        <input class="form-check-input" type="checkbox" name="remove_attachments" value="1" id="remove_attachments">
+                        <label class="form-check-label" for="remove_attachments">Hapus semua lampiran saat ini</label>
+                    </div>
+                @endif
 
                 <div class="mb-4 form-check">
                     <input type="checkbox"

@@ -61,6 +61,11 @@
                             Belum punya akun?
                             <a href="{{ route('register') }}" class="text-decoration-none">Daftar di sini</a>
                         </p>
+
+                        <p class="text-center small text-muted mb-0">
+                            Lupa password?
+                            <a href="{{ route('auth.forgotpassword') }}" class="text-decoration-none">Reset di sini</a>
+                        </p>
                     </form>
                 </div>
             </div>

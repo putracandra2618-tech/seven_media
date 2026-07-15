@@ -29,6 +29,50 @@
                 <p class="text-muted fst-italic mb-4">Tidak ada deskripsi.</p>
             @endif
 
+            <div class="mb-3">
+                <strong>Lampiran:</strong>
+
+                @if ($task->attachments->count() > 0)
+                    <div class="mt-2">
+                        @php
+                            $images = $task->attachments->filter(fn($a) => $a->isImage());
+                        @endphp
+
+                        @if ($images->count() > 0)
+                            <div class="mb-3">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    @foreach($images as $attachment)
+                                        <div>
+                                            <img
+                                                src="{{ route('tasks.attachment.download', [$task, $attachment]) }}"
+                                                alt="{{ $attachment->original_name }}"
+                                                class="img-fluid rounded border"
+                                                style="max-height: 200px; max-width: 200px;"
+                                            >
+                                            <small class="text-muted d-block text-center">{{ $attachment->original_name }}</small>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="list-group list-group-sm">
+                            @foreach($task->attachments as $attachment)
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ route('tasks.attachment.download', [$task, $attachment]) }}" class="text-decoration-none">
+                                            {{ $attachment->original_name }}
+                                        </a>
+                                        <small class="text-muted d-block">{{ $attachment->getExtension() }} • {{ $attachment->getFormattedSize() }}</small>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <span class="text-muted">Tidak ada lampiran</span>
+                @endif
+            </div>
             <div class="row text-muted small mb-4">
                 <div class="col-md-6">
                     <strong>Dibuat:</strong> {{ $task->created_at->format('d M Y, H:i') }}
@@ -37,7 +81,6 @@
                     <strong>Diupdate:</strong> {{ $task->updated_at->format('d M Y, H:i') }}
                 </div>
             </div>
-
             <div class="d-flex gap-2">
                 <a href="{{ route('tasks.edit', $task) }}" class="btn btn-warning">
                     Edit Task

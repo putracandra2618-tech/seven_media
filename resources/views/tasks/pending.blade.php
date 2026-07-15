@@ -1,42 +1,79 @@
 @extends('layouts.app')
 
-@section('title', 'Daftar Task')
+@section('title', 'Pending Tasks')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h2 fw-bold mb-1">Daftar Task</h1>
-            <p class="text-muted mb-0 small">Data diambil dari database MySQL</p>
-        </div>
-        <span class="badge bg-primary fs-6">{{ $tasks->count() }} task</span>
-    </div>
-
     @if($tasks->isEmpty())
-        <div class="alert alert-info">
-            Belum ada task di database.
-            Jalankan <code>php artisan db:seed --class=TaskSeeder</code>
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+            <p class="text-muted mb-3">Tidak ada task yang masih pending.</p>
         </div>
-    @else
-        <div class="list-group shadow-sm">
-            @foreach($tasks as $task)
-                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start py-3">
-                    <div class="me-3">
-                        <h5 class="mb-1 fw-semibold {{ $task->is_done ? 'text-decoration-line-through text-muted' : '' }}">
-                            {{ $task->title }}
-                        </h5>
-                        @if($task->description)
-                            <p class="mb-1 small text-muted">{{ $task->description }}</p>
-                        @endif
-                        <small class="text-muted">
-                            Dibuat: {{ $task->created_at->format('d M Y, H:i') }}
-                        </small>
-                    </div>
-                    <span class="badge {{ $task->is_done ? 'bg-success' : 'bg-warning text-dark' }} align-self-center">
-                        {{ $task->is_done ? 'Selesai' : 'Belum' }}
-                    </span>
-                </div>
-            @endforeach
-        </div>
-    @endif
+    </div>
+@else
+    <div class="table-responsive">
+        <table class="table table-striped table-hover bg-white shadow-sm">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 50px;">No</th>
+                    <th>Judul</th>
+                    <th style="width: 120px;">Status</th>
+                    <th style="width: 180px;">Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach($tasks as $task)
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+
+                        <td>
+                            <a href="{{ route('tasks.show', $task) }}"
+                               class="text-decoration-none fw-semibold">
+                                {{ $task->title }}
+                            </a>
+
+                            @if($task->category)
+                                <span class="badge bg-{{ $task->category->color }} ms-1">
+                                    {{ $task->category->name }}
+                                </span>
+                            @endif
+
+                            @if($task->description)
+                                <br>
+                                <small class="text-muted">
+                                    {{ Str::limit($task->description, 60) }}
+                                </small>
+                            @endif
+                        </td>
+
+                        <td>
+                            <span class="badge bg-warning text-dark">
+                                Pending
+                            </span>
+                        </td>
+
+                        <td>
+                            <a href="{{ route('tasks.edit', $task) }}"
+                               class="btn btn-warning btn-sm">
+                                Edit
+                            </a>
+
+                            <form action="{{ route('tasks.destroy', $task) }}"
+                                  method="POST"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Yakin hapus task ini?')">
+                                @csrf
+                                @method('DELETE')
+
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    Hapus
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+@endif
 @endsection
-  

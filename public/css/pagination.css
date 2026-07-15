@@ -1,0 +1,16 @@
+/* Dropdown muncul saat hover */
+.navbar .dropdown:hover .dropdown-menu {
+    display: block;
+    margin-top: 0;
+}
+
+/* Efek hover pada menu Tasks */
+.navbar .dropdown:hover > .nav-link {
+    color: #0d6efd;
+}
+
+/* Hover pada item dropdown */
+.dropdown-menu .dropdown-item:hover {
+    background-color: #0d6efd;
+    color: #fff;
+}

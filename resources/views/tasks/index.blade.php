@@ -8,9 +8,16 @@
             <h1 class="h2 fw-bold mb-1">Daftar Task</h1>
             <p class="text-muted mb-0 small">Kelola semua task kamu</p>
         </div>
-        <a href="{{ route('tasks.create') }}" class="btn btn-primary">
-            + Tambah Task
-        </a>
+
+        <div class="d-flex gap-2">
+            <a href="{{ route('tasks.export') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+
+            <a href="{{ route('tasks.create') }}" class="btn btn-primary">
+                + Tambah Task
+            </a>
+        </div>
     </div>
 
     {{-- Search & Filter --}}
@@ -73,6 +80,8 @@
                     <tr>
                         <th style="width: 50px;">No</th>
                         <th>Judul</th>
+                        <th style="width: 120px;">Lampiran File</th>
+                        <th style="width: 120px;">Tanggal Akhir</th>
                         <th style="width: 120px;">Status</th>
                         <th style="width: 180px;">Aksi</th>
                     </tr>
@@ -102,6 +111,29 @@
                                 @endif
                             </td>
                             <td>
+                                @if ($task->attachment)
+                                    <a href="{{ asset('storage/' . $task->attachment) }}"
+                                       class="badge text-bg-secondary text-decoration-none"
+                                       target="_blank"
+                                       rel="noopener">
+                                        File
+                                    </a>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+
+                            <td>
+                                @if($task->due_date)
+                                    <span class="text-muted">
+                                        {{ \Carbon\Carbon::parse($task->due_date)->format('d M Y') }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+
+                            <td>
                                 <span class="badge {{ $task->is_done ? 'bg-success' : 'bg-warning text-dark' }}">
                                     {{ $task->is_done ? 'Selesai' : 'Belum' }}
                                 </span>
@@ -127,7 +159,7 @@
 
         {{-- Pagination --}}
         <div class="mt-3 d-flex justify-content-center">
-            {{ $tasks->links() }}
+            {{ $tasks->links('vendor.pagination.simple-bootstrap-5') }}
         </div>
     @endif
 @endsection
