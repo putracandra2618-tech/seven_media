@@ -30,6 +30,17 @@
             @endif
 
             <div class="mb-3">
+                <strong>Tags:</strong>
+                <div class="mb-2">
+                    @forelse ($task->tags as $tag)
+                        <span class="badge bg-{{ $tag->color }} me-1 mb-1">{{ $tag->name }}</span>
+                    @empty
+                        <span class="text-muted">Tidak ada tag.</span>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="mb-3">
                 <strong>Lampiran:</strong>
 
                 @if ($task->attachments->count() > 0)

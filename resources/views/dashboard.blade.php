@@ -96,4 +96,30 @@
             </div>
         </div>
     </div>
+
+    <div class="row g-4 mt-3">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                    <span>Tag Terpopuler</span>
+                    <a href="{{ route('tags.index') }}" class="btn btn-outline-primary btn-sm">Kelola</a>
+                </div>
+                <div class="card-body p-0">
+                    @forelse($popularTags as $tag)
+                        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                            <span>
+                                <span class="badge bg-{{ $tag->color }}">{{ $tag->name }}</span>
+                            </span>
+                            <span class="text-muted small">{{ $tag->tasks_count }} task</span>
+                        </div>
+                    @empty
+                        <p class="text-muted small p-3 mb-0">
+                            Belum ada tag.
+                            <a href="{{ route('tags.create') }}">Buat sekarang</a>
+                        </p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection

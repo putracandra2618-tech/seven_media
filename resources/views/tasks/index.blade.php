@@ -45,6 +45,17 @@
                     </select>
                 </div>
                 <div class="col-md-3">
+                    <label class="form-label small fw-semibold mb-1">Tag</label>
+                    <select name="tag" class="form-select form-select-sm">
+                        <option value="">Semua Tag</option>
+                        @foreach ($tags as $tag)
+                            <option value="{{ $tag->id }}" @selected(request('tag') == $tag->id)>
+                                {{ $tag->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label small fw-semibold mb-1">Status</label>
                     <select name="status" class="form-select form-select-sm">
                         <option value="">Semua Status</option>
@@ -102,6 +113,13 @@
                                         {{ $task->category->name }}
                                     </span>
                                 @endif
+
+                                @foreach($task->tags as $tag)
+                                    <span class="badge bg-{{ $tag->color }} ms-1"
+                                        style="font-size: 0.7rem;">
+                                        {{ $tag->name }}
+                                    </span>
+                                @endforeach
 
                                 @if($task->description)
                                     <br>

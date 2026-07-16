@@ -60,6 +60,39 @@
                     </select>
                 </div>
 
+                {{-- Tags --}}
+                <div class="mb-3">
+                    <label class="form-label d-block">Tags</label>
+
+                    @forelse ($tags as $tag)
+                        <div class="form-check form-check-inline">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="tags[]"
+                                id="tag-{{ $tag->id }}"
+                                value="{{ $tag->id }}"
+                                @checked(collect(old('tags', []))->contains($tag->id))
+                            >
+                            <label class="form-check-label" for="tag-{{ $tag->id }}">
+                                {{ $tag->name }}
+                            </label>
+                        </div>
+                    @empty
+                        <p class="text-muted mb-0">
+                            Belum ada tag.
+                            <a href="{{ route('tags.create') }}">Buat tag dulu</a>.
+                        </p>
+                    @endforelse
+
+                    @error('tags')
+                        <div class="text-danger small">{{ $message }}</div>
+                    @enderror
+                    @error('tags.*')
+                        <div class="text-danger small">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 {{-- Tanggal Jatuh Tempo --}}
                 <div class="mb-3">
                     <label for="due_date" class="form-label fw-semibold">Tanggal Jatuh Tempo</label>

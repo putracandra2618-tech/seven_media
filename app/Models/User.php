@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Tag;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -39,5 +40,10 @@ class User extends Authenticatable
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
+    }
+
+    public function tags(): HasMany
+    {
+        return $this->hasMany(Tag::class);
     }
 }

@@ -23,12 +23,19 @@ class DashboardController extends Controller
             ->orderByDesc('tasks_count')
             ->get();
 
+        $popularTags = $user->tags()
+            ->withCount('tasks')
+            ->orderByDesc('tasks_count')
+            ->take(5)
+            ->get();
+
         return view('dashboard', compact(
             'total',
             'done',
             'pending',
             'recentTasks',
-            'categories'
+            'categories',
+            'popularTags'
         ));
     }
 }

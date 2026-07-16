@@ -9,6 +9,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -34,11 +35,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/tasks/pending', [TaskController::class, 'pending'])->name('tasks.pending');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
-    Route::get('/tasks/export', [TaskController::class, 'export'])
-    ->name('tasks.export');
+    Route::get('/tasks/export', [TaskController::class, 'export'])->name('tasks.export');
     Route::get('/tasks/{task}/attachments/{attachment}', [TaskController::class, 'downloadAttachment'])->name('tasks.attachment.download');
+    // Route untuk soft delete tasks
+    Route::get('/tasks/trashed', [TaskController::class, 'trashed'])->name('tasks.trashed');
+    Route::post('/tasks/restore-all', [TaskController::class, 'restoreAll'])->name('tasks.restoreAll');
+    Route::post('/tasks/{id}/restore', [TaskController::class, 'restore'])->name('tasks.restore');
+    Route::delete('/tasks/{id}/force-delete', [TaskController::class, 'forceDelete'])->name('tasks.forceDelete');
     Route::resource('categories', CategoryController::class);
     Route::resource('tasks', TaskController::class);
+    Route::resource('tags', TagController::class)->except(['show']);
 });
 
 

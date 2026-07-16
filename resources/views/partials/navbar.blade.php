@@ -22,6 +22,11 @@
                     </li>
                 @endguest
                 @auth
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-semibold' : '' }}"
+                         href="{{ route('dashboard') }}">Dashboard</a>
+                    </li>
+
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {{ request()->routeIs('tasks.*') ? 'active fw-semibold' : '' }}"
                         href="#"
@@ -48,18 +53,23 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-semibold' : '' }}"
-                        href="{{ route('dashboard') }}">Dashboard</a>
-                    </li>
+                   
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('categories.*') ? 'active fw-semibold' : '' }}"
                         href="{{ route('categories.index') }}">Kategori</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('tags.index') ? 'active fw-semibold' : '' }}"
+                        href="{{ route('tags.index') }}">Tags</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('profile*') ? 'active fw-semibold' : '' }}"
                         href="{{ route('profile') }}">Profile</a>
+                    </li><li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('tasks.trashed') ? 'active fw-semibold' : '' }}"
+                        href="{{ route('tasks.trashed') }}">Trash</a>
                     </li>
+
                 @endauth
             </ul>
 

@@ -14,8 +14,8 @@ class TaskController extends Controller
     {
         $query = auth()->user()
             ->tasks()
-            ->with('category')
-            ->latest();
+            ->with(['category', 'tags'])
+            ->withCount('tags');
 
         // Search by judul
         if ($request->filled('search')) {
@@ -27,6 +27,14 @@ class TaskController extends Controller
             $query->where('category_id', $request->category);
         }
 
+        // Filter by tag
+        if ($request->filled('tag')) {
+            $tagId = (int) $request->tag;
+            $query->whereHas('tags', function ($q) use ($tagId) {
+                $q->where('tags.id', $tagId);
+            });
+        }
+
         // Filter by status
         if ($request->filled('status')) {
             if ($request->status === 'done') {
@@ -36,10 +44,11 @@ class TaskController extends Controller
             }
         }
 
-        $tasks = $query->paginate(10)->withQueryString();
+        $tasks = $query->latest()->paginate(10)->withQueryString();
         $categories = auth()->user()->categories()->orderBy('name')->get();
+        $tags = auth()->user()->tags()->orderBy('name')->get();
 
-        return view('tasks.index', compact('tasks', 'categories'));
+        return view('tasks.index', compact('tasks', 'categories', 'tags'));
     }
     public function store(Request $request)
     {
@@ -49,6 +58,8 @@ class TaskController extends Controller
             'is_done'     => ['sometimes', 'boolean'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'due_date'    => ['nullable', 'date'],
+            'tags'        => ['nullable', 'array'],
+            'tags.*'      => ['integer', 'exists:tags,id'],
             'attachments'  => [
                 'nullable',
                 'array',
@@ -83,8 +94,18 @@ class TaskController extends Controller
         $validated['is_done'] = $request->boolean('is_done');
         $validated['user_id'] = auth()->id();
 
-        // Hapus attachments dari validated, akan simpan manual setelah task dibuat
-        unset($validated['attachments']);
+        $tagIds = collect($request->input('tags', []))
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        // Pastikan semua tag milik user login
+        $ownedTagIds = auth()->user()->tags()
+            ->whereIn('id', $tagIds)
+            ->pluck('id')
+            ->all();
+
+        // Hapus attachments dan tags dari validated, akan simpan manual setelah task dibuat
+        unset($validated['attachments'], $validated['tags']);
 
         $task = Task::create($validated);
 
@@ -102,6 +123,8 @@ class TaskController extends Controller
             }
         }
 
+        $task->tags()->sync($ownedTagIds);
+
         return redirect()
             ->route('tasks.index')
             ->with('success', 'Task berhasil dibuat!');
@@ -116,18 +139,19 @@ class TaskController extends Controller
     public function create()
     {
         $categories = auth()->user()->categories()->orderBy('name')->get();
+        $tags = auth()->user()->tags()->orderBy('name')->get();
 
-        return view('tasks.create', compact('categories'));
+        return view('tasks.create', compact('categories', 'tags'));
     }
 
-
-        public function edit(Task $task)
+    public function edit(Task $task)
     {
         $this->authorizeTask($task);
 
         $categories = auth()->user()->categories()->orderBy('name')->get();
+        $tags = auth()->user()->tags()->orderBy('name')->get();
 
-        return view('tasks.edit', compact('task', 'categories'));
+        return view('tasks.edit', compact('task', 'categories', 'tags'));
     }
 
     public function update(Request $request, Task $task)
@@ -140,6 +164,8 @@ class TaskController extends Controller
             'is_done'     => ['sometimes', 'boolean'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'due_date'    => ['nullable', 'date'],
+            'tags'        => ['nullable', 'array'],
+            'tags.*'      => ['integer', 'exists:tags,id'],
             'attachments'  => [
                 'nullable',
                 'array',
@@ -172,6 +198,15 @@ class TaskController extends Controller
 
         $validated['is_done'] = $request->boolean('is_done');
 
+        $tagIds = collect($request->input('tags', []))
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $ownedTagIds = auth()->user()->tags()
+            ->whereIn('id', $tagIds)
+            ->pluck('id')
+            ->all();
+
         // Hapus semua lampiran lama jika checkbox remove_attachments dicentang
         if ($request->boolean('remove_attachments')) {
             foreach ($task->attachments as $attachment) {
@@ -180,8 +215,8 @@ class TaskController extends Controller
             }
         }
 
-        // Hapus attachments dari validated, akan simpan manual
-        unset($validated['attachments']);
+        // Hapus attachments dan tags dari validated, akan simpan manual
+        unset($validated['attachments'], $validated['tags']);
 
         // Tambah lampiran baru
         if ($request->hasFile('attachments')) {
@@ -198,6 +233,7 @@ class TaskController extends Controller
         }
 
         $task->update($validated);
+        $task->tags()->sync($ownedTagIds);
 
         return redirect()
             ->route('tasks.show', $task)
@@ -208,17 +244,77 @@ class TaskController extends Controller
     {
         $this->authorizeTask($task);
 
+        // Soft delete task (bukan hapus permanen)
+        $task->delete();
+
+        return redirect()
+            ->route('tasks.index')
+            ->with('success', 'Task berhasil dipindahkan ke sampah!');
+    }
+
+        public function trashed()
+    {
+        // Hanya ambil task yang sudah dihapus (onlyTrashed)
+        $tasks = Task::onlyTrashed()
+            ->where('user_id', auth()->id())
+            ->with('category')
+            ->latest()
+            ->paginate(10);
+
+        return view('tasks.trashed', compact('tasks'));
+    }
+
+    public function restoreAll()
+    {
+        $tasks = Task::onlyTrashed()
+            ->where('user_id', auth()->id())
+            ->get();
+
+        foreach ($tasks as $task) {
+            $task->restore();
+        }
+
+        return redirect()
+            ->route('tasks.trashed')
+            ->with('success', 'Semua task di trash berhasil dipulihkan!');
+    }
+
+    /**
+     * Pulihkan task yang sudah di-soft delete
+     */
+    public function restore($id)
+    {
+        // Cari task termasuk yang sudah dihapus (withTrashed)
+        $task = Task::withTrashed()->findOrFail($id);
+        $this->authorizeTask($task);
+        
+        $task->restore();
+
+        return redirect()
+            ->route('tasks.trashed')
+            ->with('success', 'Task berhasil dipulihkan!');
+    }
+
+    /**
+     * Hapus task secara permanen dari database
+     */
+    public function forceDelete($id)
+    {
+        // Cari task termasuk yang sudah dihapus (withTrashed)
+        $task = Task::withTrashed()->findOrFail($id);
+        $this->authorizeTask($task);
+
         // Hapus semua file attachments
         foreach ($task->attachments as $attachment) {
             Storage::disk('public')->delete($attachment->path);
             $attachment->delete();
         }
 
-        $task->delete();
+        $task->forceDelete();
 
         return redirect()
-            ->route('tasks.index')
-            ->with('success', 'Task berhasil dihapus!');
+            ->route('tasks.trashed')
+            ->with('success', 'Task berhasil dihapus permanen!');
     }
 
     /**
