@@ -41,6 +41,7 @@ class RegisterController extends Controller
             'name'     => $validated['name'],
             'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'role'     => 'user',
         ]);
 
         // Auto login setelah register

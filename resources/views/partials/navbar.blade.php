@@ -70,6 +70,38 @@
                         href="{{ route('tasks.trashed') }}">Trash</a>
                     </li>
 
+                    @can('access-admin')
+                        @if (Route::has('admin.dashboard'))
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active fw-semibold' : '' }}"
+                                   href="{{ route('admin.dashboard') }}">Admin</a>
+                            </li>
+                        @endif
+
+                        @if (Route::has('admin.users.index'))
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-semibold' : '' }}"
+                                   href="{{ route('admin.users.index') }}">Users</a>
+                            </li>
+                        @endif
+                    @else
+                        @if(auth()->user()->isAdmin())
+                            @if (Route::has('admin.dashboard'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active fw-semibold' : '' }}"
+                                       href="{{ route('admin.dashboard') }}">Admin</a>
+                                </li>
+                            @endif
+
+                            @if (Route::has('admin.users.index'))
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-semibold' : '' }}"
+                                       href="{{ route('admin.users.index') }}">Users</a>
+                                </li>
+                            @endif
+                        @endif
+                    @endcan
+
                 @endauth
             </ul>
 

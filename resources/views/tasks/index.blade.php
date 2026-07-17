@@ -129,16 +129,17 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($task->attachment)
-                                    <a href="{{ asset('storage/' . $task->attachment) }}"
-                                       class="badge text-bg-secondary text-decoration-none"
-                                       target="_blank"
-                                       rel="noopener">
-                                        File
-                                    </a>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
+                                    @if ($task->attachments && $task->attachments->count() > 0)
+                                        @php $first = $task->attachments->first(); @endphp
+                                        <a href="{{ route('tasks.attachment.download', [$task, $first]) }}"
+                                           class="badge text-bg-secondary text-decoration-none"
+                                           target="_blank"
+                                           rel="noopener">
+                                            File
+                                        </a>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                             </td>
 
                             <td>
@@ -157,17 +158,22 @@
                                 </span>
                             </td>
                             <td>
-                                <a href="{{ route('tasks.edit', $task) }}"
-                                   class="btn btn-warning btn-sm">Edit</a>
+                                @can('update', $task)
+                                    <a href="{{ route('tasks.edit', $task) }}" class="btn btn-warning btn-sm">Edit</a>
+                                @else
+                                    <span class="text-muted small">Hanya pemilik / admin</span>
+                                @endcan
 
-                                <form action="{{ route('tasks.destroy', $task) }}"
-                                      method="POST"
-                                      class="d-inline"
-                                      onsubmit="return confirm('Yakin hapus task ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                                </form>
+                                @can('delete', $task)
+                                    <form action="{{ route('tasks.destroy', $task) }}"
+                                          method="POST"
+                                          class="d-inline"
+                                          onsubmit="return confirm('Yakin hapus task ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                    </form>
+                                @endcan
                             </td>
                         </tr>
                     @endforeach

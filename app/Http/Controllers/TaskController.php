@@ -14,7 +14,7 @@ class TaskController extends Controller
     {
         $query = auth()->user()
             ->tasks()
-            ->with(['category', 'tags'])
+            ->with(['category', 'tags', 'attachments'])
             ->withCount('tags');
 
         // Search by judul
@@ -131,7 +131,9 @@ class TaskController extends Controller
     }
     public function show(Task $task)
     {
-        $this->authorizeTask($task);
+        $this->authorize('view', $task);
+
+        $task->load(['category', 'tags', 'user']);
 
         return view('tasks.show', compact('task'));
     }
@@ -146,17 +148,23 @@ class TaskController extends Controller
 
     public function edit(Task $task)
     {
-        $this->authorizeTask($task);
+        $this->authorize('update', $task);
 
         $categories = auth()->user()->categories()->orderBy('name')->get();
         $tags = auth()->user()->tags()->orderBy('name')->get();
+
+        // Admin mengedit task user lain: kategori/tag milik owner task
+        if (auth()->user()->isAdmin() && $task->user_id !== auth()->id()) {
+            $categories = $task->user->categories()->orderBy('name')->get();
+            $tags = $task->user->tags()->orderBy('name')->get();
+        }
 
         return view('tasks.edit', compact('task', 'categories', 'tags'));
     }
 
     public function update(Request $request, Task $task)
     {
-        $this->authorizeTask($task); // dari Modul 07/08 — ownership check
+        $this->authorize('update', $task);
 
         $validated = $request->validate([
             'title'       => ['required', 'string', 'max:255'],
@@ -242,26 +250,24 @@ class TaskController extends Controller
 
     public function destroy(Task $task)
     {
-        $this->authorizeTask($task);
+        $this->authorize('delete', $task);
 
-        // Soft delete task (bukan hapus permanen)
         $task->delete();
 
         return redirect()
             ->route('tasks.index')
-            ->with('success', 'Task berhasil dipindahkan ke sampah!');
+            ->with('success', 'Task dipindahkan ke trash.');
     }
 
         public function trashed()
     {
-        // Hanya ambil task yang sudah dihapus (onlyTrashed)
-        $tasks = Task::onlyTrashed()
-            ->where('user_id', auth()->id())
-            ->with('category')
-            ->latest()
-            ->paginate(10);
+            $query = auth()->user()->isAdmin()
+                ? Task::onlyTrashed()->with(['user', 'category', 'tags'])
+                : Task::onlyTrashed()->where('user_id', auth()->id())->with(['category', 'tags']);
 
-        return view('tasks.trashed', compact('tasks'));
+            $tasks = $query->latest('deleted_at')->paginate(10);
+
+            return view('tasks.trashed', compact('tasks'));
     }
 
     public function restoreAll()
@@ -284,15 +290,11 @@ class TaskController extends Controller
      */
     public function restore($id)
     {
-        // Cari task termasuk yang sudah dihapus (withTrashed)
-        $task = Task::withTrashed()->findOrFail($id);
-        $this->authorizeTask($task);
-        
+        $task = Task::onlyTrashed()->findOrFail($id);
+        $this->authorize('restore', $task);
         $task->restore();
 
-        return redirect()
-            ->route('tasks.trashed')
-            ->with('success', 'Task berhasil dipulihkan!');
+        return back()->with('success', 'Task direstore.');
     }
 
     /**
@@ -300,21 +302,21 @@ class TaskController extends Controller
      */
     public function forceDelete($id)
     {
-        // Cari task termasuk yang sudah dihapus (withTrashed)
-        $task = Task::withTrashed()->findOrFail($id);
-        $this->authorizeTask($task);
+        $task = Task::onlyTrashed()->findOrFail($id);
+        $this->authorize('forceDelete', $task);
 
-        // Hapus semua file attachments
+        // Hapus file attachments dan recordnya
         foreach ($task->attachments as $attachment) {
             Storage::disk('public')->delete($attachment->path);
             $attachment->delete();
         }
 
+        // Detach tags
+        $task->tags()->detach();
+
         $task->forceDelete();
 
-        return redirect()
-            ->route('tasks.trashed')
-            ->with('success', 'Task berhasil dihapus permanen!');
+        return back()->with('success', 'Task dihapus permanen.');
     }
 
     /**

@@ -46,4 +46,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(Tag::class);
     }
+
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
+
+    /**
+     * Cek apakah user adalah admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 }

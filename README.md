@@ -134,6 +134,21 @@ tasks
 5. Lihat dashboard di `/dashboard` — statistik & task terbaru
 6. Coba search & filter di halaman tasks
 
+## Matrix Akses (Guest vs Auth vs Admin)
+
+| Halaman | Guest | Auth biasa | Auth + Admin |
+|---|---|---|---|
+| `/` | ✅ | ✅ | ✅ |
+| `/register` | ✅ | ❌ | ❌ |
+| `/login` | ✅ | ❌ | ❌ |
+| `/dashboard` | ❌ | ✅ | ✅ |
+| `/tasks` | ❌ | ✅ | ✅ |
+| `/categories` | ❌ | ✅ (milik sendiri) | ✅ |
+| `/tags` | ❌ | ✅ (milik sendiri) | ✅ |
+| `/tasks/trashed` | ❌ | ✅ (milik sendiri) | ✅ (lihat semua) |
+| `/admin/dashboard` | ❌ | ❌ | ✅ |
+| `/admin/users` | ❌ | ❌ | ✅ |
+
 ## Troubleshooting
 
 | Masalah | Solusi |

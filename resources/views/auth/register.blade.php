@@ -73,7 +73,7 @@
 
                         <p class="text-center small text-muted mb-0">
                             Sudah punya akun?
-                            <a href="{{ route('auth.login') }}" class="text-decoration-none">Login di sini</a>
+                            <a href="{{ route('login') }}" class="text-decoration-none">Login di sini</a>
                         </p>
                     </form>
                 </div>

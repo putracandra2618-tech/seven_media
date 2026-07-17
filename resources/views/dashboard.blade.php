@@ -50,8 +50,7 @@
                     @forelse($recentTasks as $task)
                         <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                             <div>
-                                <a href="{{ route('tasks.show', $task) }}"
-                                   class="text-decoration-none fw-semibold small {{ $task->is_done ? 'text-muted text-decoration-line-through' : '' }}">
+                                <a href="{{ route('tasks.show', $task) }}" class="text-decoration-none fw-semibold small {{ $task->is_done ? 'text-muted text-decoration-line-through' : '' }}">
                                     {{ $task->title }}
                                 </a>
                                 @if($task->category)

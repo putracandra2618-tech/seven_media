@@ -36,7 +36,7 @@
                                 @csrf
                                 <button class="btn btn-sm btn-success">Restore</button>
                             </form>
-                            <form action="{{ route('tasks.force-delete', $task->id) }}" method="POST" class="d-inline"
+                            <form action="{{ route('tasks.forceDelete', $task->id) }}" method="POST" class="d-inline"
                                   onsubmit="return confirm('Hapus permanen? Lampiran akan ikut terhapus. Lanjutkan?')">
                                 @csrf
                                 @method('DELETE')

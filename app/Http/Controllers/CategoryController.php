@@ -9,6 +9,8 @@ class CategoryController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', Category::class);
+
         $categories = auth()->user()
             ->categories()
             ->withCount('tasks')
@@ -20,11 +22,15 @@ class CategoryController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Category::class);
+
         return view('categories.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Category::class);
+
         $validated = $request->validate([
             'name'  => 'required|string|max:100',
             'color' => 'required|in:primary,success,danger,warning,info,secondary',
@@ -39,14 +45,14 @@ class CategoryController extends Controller
 
     public function edit(Category $category)
     {
-        $this->authorizeCategory($category);
+        $this->authorize('update', $category);
 
         return view('categories.edit', compact('category'));
     }
 
     public function update(Request $request, Category $category)
     {
-        $this->authorizeCategory($category);
+        $this->authorize('update', $category);
 
         $validated = $request->validate([
             'name'  => 'required|string|max:100',
@@ -62,7 +68,7 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
-        $this->authorizeCategory($category);
+        $this->authorize('delete', $category);
 
         $category->delete();
 
@@ -71,10 +77,4 @@ class CategoryController extends Controller
             ->with('success', 'Kategori berhasil dihapus!');
     }
 
-    private function authorizeCategory(Category $category): void
-    {
-        if ($category->user_id !== auth()->id()) {
-            abort(403, 'Anda tidak berhak mengakses kategori ini.');
-        }
-    }
 }

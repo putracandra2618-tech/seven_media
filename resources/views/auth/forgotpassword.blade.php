@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="mb-4">
-        <a href="{{ route('auth.login') }}" class="text-decoration-none small">
+        <a href="{{ route('login') }}" class="text-decoration-none small">
             ← Kembali ke Login
         </a>
     </div>

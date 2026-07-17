@@ -10,6 +10,8 @@ class TagController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', Tag::class);
+
         $tags = auth()->user()
             ->tags()
             ->withCount('tasks')
@@ -21,11 +23,15 @@ class TagController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Tag::class);
+
         return view('tags.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Tag::class);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50'],
             'color' => ['required', 'string', 'in:primary,success,danger,warning,info,secondary'],
@@ -54,14 +60,14 @@ class TagController extends Controller
 
     public function edit(Tag $tag)
     {
-        abort_unless($tag->user_id === auth()->id(), 403);
+        $this->authorize('update', $tag);
 
         return view('tags.edit', compact('tag'));
     }
 
     public function update(Request $request, Tag $tag)
     {
-        abort_unless($tag->user_id === auth()->id(), 403);
+        $this->authorize('update', $tag);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50'],
@@ -79,7 +85,7 @@ class TagController extends Controller
 
     public function destroy(Tag $tag)
     {
-        abort_unless($tag->user_id === auth()->id(), 403);
+        $this->authorize('delete', $tag);
 
         $tag->tasks()->detach();
         $tag->delete();
