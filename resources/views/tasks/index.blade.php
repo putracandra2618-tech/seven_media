@@ -153,9 +153,13 @@
                             </td>
 
                             <td>
-                                <span class="badge {{ $task->is_done ? 'bg-success' : 'bg-warning text-dark' }}">
-                                    {{ $task->is_done ? 'Selesai' : 'Belum' }}
-                                </span>
+                                <form action="{{ route('tasks.toggle', $task) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="badge {{ $task->is_done ? 'bg-success' : 'bg-warning text-dark' }} border-0">
+                                        {{ $task->is_done ? 'Selesai' : 'Belum' }}
+                                    </button>
+                                </form>
                             </td>
                             <td>
                                 @can('update', $task)

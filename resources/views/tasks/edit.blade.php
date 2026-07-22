@@ -11,6 +11,72 @@
 
     <h1 class="h2 fw-bold mb-4">Edit Task</h1>
 
+    <div class="card shadow-sm mb-3">
+        <div class="card-body p-4">
+            @if ($task->attachments->count() > 0)
+                <div class="mb-3">
+                    <span class="text-muted d-block mb-2">Lampiran saat ini:</span>
+
+                    @php
+                        $images = $task->attachments->filter(fn($a) => $a->isImage());
+                    @endphp
+
+                    @if ($images->count() > 0)
+                        <div class="mb-3">
+                            <div class="d-flex gap-2 flex-wrap">
+                                @foreach($images as $attachment)
+                                    <div class="text-center">
+                                        <img
+                                            src="{{ route('tasks.attachment.download', [$task, $attachment]) }}"
+                                            alt="{{ $attachment->original_name }}"
+                                            class="img-fluid rounded border mb-2"
+                                            style="max-height: 200px; max-width: 200px;"
+                                        >
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a href="{{ route('tasks.attachment.download', [$task, $attachment]) }}" class="text-decoration-none small btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download"></i> Download
+                                            </a>
+                                            <form action="{{ route('tasks.attachment.destroy', [$task, $attachment]) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus lampiran ini?');">
+                                                    <i class="fas fa-trash"></i> Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <small class="text-muted d-block">{{ $attachment->original_name }}</small>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="list-group list-group-sm">
+                        @foreach($task->attachments as $attachment)
+                            @if (!$attachment->isImage())
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ route('tasks.attachment.download', [$task, $attachment]) }}" class="text-decoration-none">
+                                            {{ $attachment->original_name }}
+                                        </a>
+                                        <small class="text-muted d-block">{{ $attachment->getExtension() }} • {{ $attachment->getFormattedSize() }}</small>
+                                    </div>
+                                    <form action="{{ route('tasks.attachment.destroy', [$task, $attachment]) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus lampiran ini?');">
+                                            <i class="fas fa-trash"></i> Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-body p-4">
             <form action="{{ route('tasks.update', $task) }}" method="POST" enctype="multipart/form-data">
@@ -64,10 +130,10 @@
                             <input
                                 class="form-check-input"
                                 type="checkbox"
-                                name="tags[]"
+                                name="tag_ids[]"
                                 id="tag-{{ $tag->id }}"
                                 value="{{ $tag->id }}"
-                                @checked(collect(old('tags', $task->tags->pluck('id')->all()))->contains($tag->id))
+                                @checked(collect(old('tag_ids', $task->tags->pluck('id')->all()))->contains($tag->id))
                             >
                             <label class="form-check-label" for="tag-{{ $tag->id }}">
                                 {{ $tag->name }}
@@ -80,10 +146,10 @@
                         </p>
                     @endforelse
 
-                    @error('tags')
+                    @error('tag_ids')
                         <div class="text-danger small">{{ $message }}</div>
                     @enderror
-                    @error('tags.*')
+                    @error('tag_ids.*')
                         <div class="text-danger small">{{ $message }}</div>
                     @enderror
                 </div>
@@ -101,25 +167,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="attachments" class="form-label">Lampiran</label>
-
-                    @if ($task->attachments->count() > 0)
-                        <div class="mb-3">
-                            <span class="text-muted d-block mb-2">Lampiran saat ini:</span>
-                            <div class="list-group list-group-sm">
-                                @foreach($task->attachments as $attachment)
-                                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <a href="{{ route('tasks.attachment.download', [$task, $attachment]) }}" class="text-decoration-none">
-                                                {{ $attachment->original_name }}
-                                            </a>
-                                            <small class="text-muted d-block">{{ $attachment->getExtension() }} • {{ $attachment->getFormattedSize() }}</small>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
+                    <label for="attachments" class="form-label">Tambah Lampiran Baru</label>
 
                     <input
                         type="file"
@@ -143,13 +191,6 @@
                         }
                     });
                 </script>
-
-                @if ($task->attachments->count() > 0)
-                    <div class="mb-3 form-check">
-                        <input class="form-check-input" type="checkbox" name="remove_attachments" value="1" id="remove_attachments">
-                        <label class="form-check-label" for="remove_attachments">Hapus semua lampiran saat ini</label>
-                    </div>
-                @endif
 
                 <div class="mb-4 form-check">
                     <input type="checkbox"

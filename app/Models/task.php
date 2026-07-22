@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,8 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 class Task extends Model
 {
-
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
 
     protected $fillable = [
@@ -78,5 +78,43 @@ class Task extends Model
         } else {
             return round($size / (1024 * 1024), 2) . ' MB';
         }
+    }
+
+    public function attachmentUrl(): ?string
+    {
+        if (!$this->attachment) {
+            return null;
+        }
+
+        return asset('storage/' . $this->attachment);
+    }
+
+    public function isImageAttachment(): bool
+    {
+        if (!$this->attachment) {
+            return false;
+        }
+
+        $ext = strtolower(pathinfo($this->attachment, PATHINFO_EXTENSION));
+
+        return in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+    }
+
+    public function dueDate(): ?string
+    {
+        if (!$this->due_date) {
+            return null;
+        }
+
+        return $this->due_date->format('Y-m-d');
+    }
+
+    public function isOverdue(): bool
+    {
+        if (!$this->due_date) {
+            return false;
+        }
+
+        return $this->due_date->isBefore(now());
     }
 }

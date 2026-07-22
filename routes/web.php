@@ -39,6 +39,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::get('/tasks/export', [TaskController::class, 'export'])->name('tasks.export');
     Route::get('/tasks/{task}/attachments/{attachment}', [TaskController::class, 'downloadAttachment'])->name('tasks.attachment.download');
+    Route::delete('/tasks/{task}/attachments/{attachment}', [TaskController::class, 'destroyAttachment'])->name('tasks.attachment.destroy');
+    Route::patch('/tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
     // Route untuk soft delete tasks
     Route::get('/tasks/trashed', [TaskController::class, 'trashed'])->name('tasks.trashed');
     Route::post('/tasks/restore-all', [TaskController::class, 'restoreAll'])->name('tasks.restoreAll');

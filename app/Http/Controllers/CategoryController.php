@@ -3,10 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use Illuminate\Http\Request;
+use App\Services\CategoryService;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 
 class CategoryController extends Controller
 {
+    public function __construct(
+        protected CategoryService $categories
+    ) {}
+
     public function index()
     {
         $this->authorize('viewAny', Category::class);
@@ -27,16 +33,11 @@ class CategoryController extends Controller
         return view('categories.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
         $this->authorize('create', Category::class);
 
-        $validated = $request->validate([
-            'name'  => 'required|string|max:100',
-            'color' => 'required|in:primary,success,danger,warning,info,secondary',
-        ]);
-
-        auth()->user()->categories()->create($validated);
+        $this->categories->create(auth()->user(), $request->validated());
 
         return redirect()
             ->route('categories.index')
@@ -50,16 +51,11 @@ class CategoryController extends Controller
         return view('categories.edit', compact('category'));
     }
 
-    public function update(Request $request, Category $category)
+    public function update(UpdateCategoryRequest $request, Category $category)
     {
         $this->authorize('update', $category);
 
-        $validated = $request->validate([
-            'name'  => 'required|string|max:100',
-            'color' => 'required|in:primary,success,danger,warning,info,secondary',
-        ]);
-
-        $category->update($validated);
+        $this->categories->update($category, $request->validated());
 
         return redirect()
             ->route('categories.index')
@@ -70,11 +66,10 @@ class CategoryController extends Controller
     {
         $this->authorize('delete', $category);
 
-        $category->delete();
+        $this->categories->delete($category);
 
         return redirect()
             ->route('categories.index')
             ->with('success', 'Kategori berhasil dihapus!');
     }
-
 }

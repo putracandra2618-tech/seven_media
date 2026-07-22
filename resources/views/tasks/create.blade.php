@@ -53,9 +53,9 @@
                         <option value="">— Tanpa Kategori —</option>
                         @foreach($categories as $cat)
                             <option value="{{ $cat->id }}"
-                                {{ old('category_id', $task->category_id ?? '') == $cat->id ? 'selected' : '' }}>
-                                {{ $cat->name }}
-                            </option>
+                            {{ old('category_id') == $cat->id ? 'selected' : '' }}>
+                            {{ $cat->name }}
+                        </option>
                         @endforeach
                     </select>
                 </div>
@@ -69,10 +69,10 @@
                             <input
                                 class="form-check-input"
                                 type="checkbox"
-                                name="tags[]"
+                                name="tag_ids[]"
                                 id="tag-{{ $tag->id }}"
                                 value="{{ $tag->id }}"
-                                @checked(collect(old('tags', []))->contains($tag->id))
+                                @checked(collect(old('tag_ids', []))->contains($tag->id))
                             >
                             <label class="form-check-label" for="tag-{{ $tag->id }}">
                                 {{ $tag->name }}
@@ -85,10 +85,10 @@
                         </p>
                     @endforelse
 
-                    @error('tags')
+                    @error('tag_ids')
                         <div class="text-danger small">{{ $message }}</div>
                     @enderror
-                    @error('tags.*')
+                    @error('tag_ids.*')
                         <div class="text-danger small">{{ $message }}</div>
                     @enderror
                 </div>

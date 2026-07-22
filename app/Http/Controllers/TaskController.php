@@ -1,15 +1,28 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateTaskRequest;
+
+use App\Http\Requests\StoreTaskRequest;
+use App\Services\TaskService;
 use App\Models\Task;
 use App\Models\TaskAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 
+
 class TaskController extends Controller
 {
+
+    public function __construct(
+        protected \App\Services\Contracts\TaskServiceInterface $tasks
+    ) {
+        $this->middleware('auth');
+    }
+
     public function index(Request $request)
     {
         $query = auth()->user()
@@ -50,84 +63,17 @@ class TaskController extends Controller
 
         return view('tasks.index', compact('tasks', 'categories', 'tags'));
     }
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        $validated = $request->validate([
-            'title'       => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'is_done'     => ['sometimes', 'boolean'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'due_date'    => ['nullable', 'date'],
-            'tags'        => ['nullable', 'array'],
-            'tags.*'      => ['integer', 'exists:tags,id'],
-            'attachments'  => [
-                'nullable',
-                'array',
-                'max:6',
-            ],
-            'attachments.*'  => [
-                'nullable',
-                'file',
-                'mimes:jpg,jpeg,png,gif,webp,pdf',
-                'max:1024',
-                'dimensions:max_width=2000,max_height=2000',
-            ],
-        ], [
-            'attachments.max' => 'Maksimal 6 file yang bisa diupload.',
-            'attachments.*.max' => 'Ukuran lampiran maksimal 1 MB.',
-            'attachments.*.mimes' => 'Lampiran harus berupa gambar atau PDF.',
-            'attachments.*.dimensions' => 'Dimensi gambar maksimal 2000x2000 pixel.',
-        ]);
-
-        // Pastikan kategori milik user yang login (jika ada)
-        if (!empty($validated['category_id'])) {
-            $ownsCategory = auth()->user()
-                ->categories()
-                ->where('id', $validated['category_id'])
-                ->exists();
-
-            if (!$ownsCategory) {
-                abort(403, 'Kategori tidak valid.');
-            }
-        }
-
-        $validated['is_done'] = $request->boolean('is_done');
-        $validated['user_id'] = auth()->id();
-
-        $tagIds = collect($request->input('tags', []))
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        // Pastikan semua tag milik user login
-        $ownedTagIds = auth()->user()->tags()
-            ->whereIn('id', $tagIds)
-            ->pluck('id')
-            ->all();
-
-        // Hapus attachments dan tags dari validated, akan simpan manual setelah task dibuat
-        unset($validated['attachments'], $validated['tags']);
-
-        $task = Task::create($validated);
-
-        // Simpan multiple attachments
-        if ($request->hasFile('attachments')) {
-            $dir = 'attachments/' . auth()->id();
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store($dir, 'public');
-                $task->attachments()->create([
-                    'path' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ]);
-            }
-        }
-
-        $task->tags()->sync($ownedTagIds);
+        $this->tasks->create(
+            auth()->user(),
+            $request->validated(),
+            $request->file('attachments')
+        );
 
         return redirect()
             ->route('tasks.index')
-            ->with('success', 'Task berhasil dibuat!');
+            ->with('success', 'Task berhasil ditambahkan!');
     }
     public function show(Task $task)
     {
@@ -150,6 +96,8 @@ class TaskController extends Controller
     {
         $this->authorize('update', $task);
 
+        $task->load('attachments');
+
         $categories = auth()->user()->categories()->orderBy('name')->get();
         $tags = auth()->user()->tags()->orderBy('name')->get();
 
@@ -162,89 +110,19 @@ class TaskController extends Controller
         return view('tasks.edit', compact('task', 'categories', 'tags'));
     }
 
-    public function update(Request $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task)
     {
+        // authorize sudah di Form Request; Policy tetap boleh dipanggil
         $this->authorize('update', $task);
 
-        $validated = $request->validate([
-            'title'       => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'is_done'     => ['sometimes', 'boolean'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'due_date'    => ['nullable', 'date'],
-            'tags'        => ['nullable', 'array'],
-            'tags.*'      => ['integer', 'exists:tags,id'],
-            'attachments'  => [
-                'nullable',
-                'array',
-                'max:6',
-            ],
-            'attachments.*'  => [
-                'nullable',
-                'file',
-                'mimes:jpg,jpeg,png,gif,webp,pdf',
-                'max:1024',
-                'dimensions:max_width=2000,max_height=2000',
-            ],
-        ], [
-            'attachments.max' => 'Maksimal 6 file yang bisa diupload.',
-            'attachments.*.max' => 'Ukuran lampiran maksimal 1 MB.',
-            'attachments.*.mimes' => 'Lampiran harus berupa gambar atau PDF.',
-            'attachments.*.dimensions' => 'Dimensi gambar maksimal 2000x2000 pixel.',
-        ]);
-
-        if (!empty($validated['category_id'])) {
-            $ownsCategory = auth()->user()
-                ->categories()
-                ->where('id', $validated['category_id'])
-                ->exists();
-
-            if (!$ownsCategory) {
-                abort(403, 'Kategori tidak valid.');
-            }
-        }
-
-        $validated['is_done'] = $request->boolean('is_done');
-
-        $tagIds = collect($request->input('tags', []))
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        $ownedTagIds = auth()->user()->tags()
-            ->whereIn('id', $tagIds)
-            ->pluck('id')
-            ->all();
-
-        // Hapus semua lampiran lama jika checkbox remove_attachments dicentang
-        if ($request->boolean('remove_attachments')) {
-            foreach ($task->attachments as $attachment) {
-                Storage::disk('public')->delete($attachment->path);
-                $attachment->delete();
-            }
-        }
-
-        // Hapus attachments dan tags dari validated, akan simpan manual
-        unset($validated['attachments'], $validated['tags']);
-
-        // Tambah lampiran baru
-        if ($request->hasFile('attachments')) {
-            $dir = 'attachments/' . auth()->id();
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store($dir, 'public');
-                $task->attachments()->create([
-                    'path' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ]);
-            }
-        }
-
-        $task->update($validated);
-        $task->tags()->sync($ownedTagIds);
+        $this->tasks->update(
+            $task,
+            $request->validated(),
+            $request->file('attachments')
+        );
 
         return redirect()
-            ->route('tasks.show', $task)
+            ->route('tasks.index')
             ->with('success', 'Task berhasil diupdate!');
     }
 
@@ -330,14 +208,14 @@ class TaskController extends Controller
         }
     }
 
-    public function pending(Task $task)
+    public function pending()
     {
         $tasks = auth()->user()
-    ->tasks()
-    ->with('category')
-    ->where('is_done', false)
-    ->latest()
-    ->paginate(5);
+            ->tasks()
+            ->with('category')
+            ->where('is_done', false)
+            ->latest()
+            ->paginate(5);
 
         return view('tasks.pending', compact('tasks'));
     }
@@ -377,41 +255,26 @@ class TaskController extends Controller
         return Storage::disk('public')->download($attachment->path, $attachment->original_name);
     }
 
-    public function attachmentUrl(): ?string
+    public function destroyAttachment(Task $task, TaskAttachment $attachment)
     {
-        if (!$this->attachment) {
-            return null;
+        $this->authorizeTask($task);
+
+        // Cek attachment milik task ini
+        if ($attachment->task_id !== $task->id) {
+            abort(403, 'Anda tidak berhak menghapus file ini.');
         }
 
-        return asset('storage/' . $this->attachment);
+        $this->tasks->removeAttachment($task, $attachment);
+
+        return back()->with('success', 'Lampiran berhasil dihapus!');
     }
 
-    public function isImageAttachment(): bool
+    public function toggle(Task $task)
     {
-        if (!$this->attachment) {
-            return false;
-        }
+        $this->authorizeTask($task);
 
-        $ext = strtolower(pathinfo($this->attachment, PATHINFO_EXTENSION));
+        $this->tasks->toggle($task);
 
-        return in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
-    }
-
-    public function dueDate(): ?string
-    {
-        if (!$this->due_date) {
-            return null;
-        }
-
-        return $this->due_date->format('Y-m-d');
-    }
-
-    public function isOverdue(): bool
-    {
-        if (!$this->due_date) {
-            return false;
-        }
-
-        return $this->due_date->isBefore(now());
+        return back()->with('success', 'Status task berhasil diubah!');
     }
 }
